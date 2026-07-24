@@ -371,7 +371,7 @@ function usVerdict(data){
   if(ss.slice(0,5).some(s=>s.name==="能源"||s.name==="材料")) map.push("能源/材料领涨：利好A股有色、化工、煤炭。");
   if(ss.slice(-5).some(s=>s.name==="金融"||s.name==="房地产")) map.push("金融/地产走弱：对A股券商、地产形成情绪压制。");
   if(!map.length) map.push("板块映射不明显，盘中以A股实际资金流向为准。");
-  return {summary:`美股隔夜平均${avg>=0?"+":""}${avg.toFixed(2)}%，${lvl}（三大指数+行业板块均值）。`,impact,top,weak,map:map.join(" ")};
+  return {summary:`美股隔夜平均${avg>=0?"+":""}${avg.toFixed(2)}%，${lvl}（三大指数+行业板块均值）。`,impact,top:top_us,weak:weak_us,map:map.join(" ")};
 }
 
 /* ===================== 组装数据 ===================== */
