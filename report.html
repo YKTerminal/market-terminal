@@ -133,8 +133,7 @@ async function fetchTx(codes){
       const buf=await resp.arrayBuffer();
       const text=decGbk(buf);
       text.replace(/\r/g,"").split(";").forEach(line=>{
-        const q=parseTxLine(line);
-        if(q) out[q.code]=q;
+        try{ const q=parseTxLine(line); if(q) out[q.code]=q; }catch(e){}
       });
     }catch(e){ console.warn("tx fetch fail",batch[0],e); }
     await sleep(100);
