@@ -152,7 +152,7 @@ function parseTxLine(line){
   if(body.endsWith(";")) body=body.slice(0,-1);
   if(body.startsWith("~")||body.indexOf("~")<0) {} // keep
   const p=body.split("~");
-  if(p.length<35) return null;
+  if(p.length<10) return null;
   const price=num(p[3]), prev=num(p[4]);
   let pct=num(p[32]);
   if(pct==null && price!=null && prev) pct=(price-prev)/prev*100;
