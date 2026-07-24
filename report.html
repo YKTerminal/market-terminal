@@ -119,6 +119,10 @@ function bjNow(){
 function segmentOf(h){return h<9?"premarket":(h>=15?"afterclose":"intraday");}
 
 /* ===================== 行情抓取（腾讯，CORS 开放） ===================== */
+/* GBK 解码兼容：部分微信 WebView 的 TextDecoder 不支持 'gbk' 标签，先能力检测，
+   不支持则降级为 utf-8（英文/数字可见，中文可能乱码但不崩）；主流程整体失败时回退同域 snapshot.json */
+let _gbkDec; try { _gbkDec = new TextDecoder("gbk"); } catch(e) { _gbkDec = null; }
+function decGbk(buf){ try { return (_gbkDec || new TextDecoder("utf-8")).decode(buf); } catch(e) { return ""; } }
 async function fetchTx(codes){
   const out={};
   for(let i=0;i<codes.length;i+=40){
@@ -127,7 +131,7 @@ async function fetchTx(codes){
     try{
       const resp=await fetch(url,{cache:"no-store"});
       const buf=await resp.arrayBuffer();
-      const text=new TextDecoder("gbk").decode(buf);
+      const text=decGbk(buf);
       text.replace(/\r/g,"").split(";").forEach(line=>{
         const q=parseTxLine(line);
         if(q) out[q.code]=q;
@@ -426,6 +430,15 @@ async function gather(){
   }
   const data={segment:seg,now:bj.now,indices,watchlist,sector_analysis:sa,breadth,
               us_indices,us_sectors,hk_hengke,hk_hengu};
+  // 实时兜底：若腾讯接口整体拉取失败（微信 GBK/网络问题），回退同域快照
+  const liveValid = Object.keys(tx).length>0 || sa.some(s=>s.pct!=null) || indices.some(x=>x.pct!=null);
+  if(!liveValid){
+    try{
+      const r=await fetch("./snapshot.json",{cache:"no-store"});
+      if(r.ok){ const snap=await r.json(); snap.data.now=new Date();
+        return {data:snap.data, ts:(snap.ts||"")+" · 实时获取失败,已用最近一次服务端快照兜底"}; }
+    }catch(e){ console.warn("snapshot fallback fail",e); }
+  }
   return {data,ts:bj.str};
 }
 
